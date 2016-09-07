@@ -18,7 +18,7 @@ MENU = ("Menu:\nR - List required items\nC - List completed items"
         "\nA - Add new item\nM - Mark an item as completed\nQ - Quit")
 
 
-def load_items(lst, choice):
+def loadItems(lst, choice):
 
     total = [0, 0]  # Total[0] is total price, Total[1] is total items
     pri = [0, 0, 0]  # To store priorities, pri[0] is 1, pri [1] is 2 ...
@@ -39,9 +39,11 @@ def load_items(lst, choice):
         state = 'c'
     elif choice == "M":
         state = 'r'
-    else:
-        state = 'r'
 
+    if choice == 'A':
+        print("{}, ${:.2f} (priority {}) added to shopping list".format(lst[-1][0], float(lst[-1][1]), lst[-1][2]))
+
+    else:
         for a in range(0, 3):
             i = 0
             for L in range(0, len(lst)):
@@ -51,45 +53,57 @@ def load_items(lst, choice):
                         total[0] += float(lst[L][1])
                         total[1] += 1
                         i += 1
+        print("Total expected price for {} items: ${:.2f}".format(str(total[1]), total[0]))
 
-    print("Total expected price for {} items: ${:.2f}".format(str(total[1]), total[0]))
 
-
-def add_items(lst, choice):
+def addItems(lst, choice):
     # Function for adding items
+    itemInfo = ["", "", "", "r"]
+    itemInfo[0] = inpChk("Item name: ")  # Item name (itemInfo[0]) can have letters, numbers and special characters
+    itemInfo[1] = inpChk("Price: $")  # Price (itemInfo[1]) can be a float or an integer value
+    itemInfo[2] = inpChk("Priority: ")  # itemInfo[2] stores priority value (integer)
+    lst.append(itemInfo)
+    loadItems(lst, choice)
 
-    itName = inp_chk("Item name: ")
-    price = inp_chk("Price: $")
-    priority = inp_chk("Priority: ")
 
-
-def inp_chk(string1):
+# Function to handle inputs (extra error handling for different user inputs)
+def inpChk(pick):
+    specialChars = "!@#$%^&*()_=+`~,/'[]\<>?{}|"
     while True:
         try:
-            if string1 == "Price: $":
-                r = input(string1)
-                if r < 0:
+            r = input(pick)
+            if pick == "Price: $":  # Check price input
+                if any(c.isalpha() or (c in specialChars) for c in r):
+                    raise ValueError("Price can't contain letters or these characters '{}'".format(specialChars))
+                elif not floatOrNum(r):
+                    raise TypeError("Input is not a whole or decimal number")
+                elif float(r) < 0:  # Using float as it can evaluate integers and decimals
                     raise ValueError("Price must be >= $0")
-                elif not isinstance(r, int):
-                    raise TypeError("String is not of type 'int'")
-            elif string1 == "Priority: ":
-                r = int(input(string1))
-                if 3 < r < 0:
+            elif pick == "Priority: ":  # Check priority input
+                if not r.isdigit():
+                    raise TypeError("Invalid input; enter a valid number")
+                elif not (1 <= int(r) <= 3):
                     raise ValueError("Priority must be 1, 2 or 3")
-                elif not isinstance(r, int):
-                    raise TypeError("String is not of type 'int'")
-            else:  # Check string
-                r = str(input(string1))
-                if not any(c.isalpha() for c in r):  # If no letters in r (can contain numbers)
-                    raise TypeError("String doesn't contain letters")
-            if r.isnumeric():
-                raise TypeError("String is not of type 'str'")
-            break
+            else:  # Check string input
+                if not any(c.isalpha() for c in r) and not(r.isspace() or not r) or any((c in specialChars) for c in r):
+                    raise TypeError("Invalid string input")
+            if not isinstance(r, int):  # If r is not an integer (r.isspace() doesn't work on integers)
+                if r.isspace() or not r:
+                    raise ValueError("Input can't be blank")
+            break   # Exit while loop
         except TypeError as e:
             print(e)
         except ValueError as e:
             print(e)
     return r
+
+
+def floatOrNum(num):  # Return true if float or int and false of not
+    try:
+        float(num)  # Using float as it can evaluate integers and decimals
+        return True
+    except ValueError:
+        return False
 
 
 def main():
@@ -104,13 +118,13 @@ def main():
     choice = input(">>> ").upper()
     while choice != "Q":
         if choice == "R":
-            load_items(lst, choice)
+            loadItems(lst, choice)
         elif choice == "C":
             pass
         elif choice == "A":
-            add_items(lst, choice)
+            addItems(lst, choice)
         elif choice == "M":
-            load_items(lst, choice)
+            loadItems(lst, choice)
         else:
             print("Invalid menu choice.")
         print(MENU)
