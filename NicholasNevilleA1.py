@@ -25,38 +25,41 @@ def main():
     print(menu)
     choice = input(">>> ").upper()
     while choice != 'Q':
-        lsts = order_lsts(lsts)  # Split lists (r, c) and order nested lists by priority
+        pri = order_lsts(lsts,'y')
+        lsts = order_lsts(lsts, None)  # Split lists (r, c) and order nested lists by priority
         if choice == 'R':
-            load_items(lsts, choice, 1)  # 1 to Pass through if statement later
+            if sum(pri[0]) == 0:
+                print("No required items")
+            else:
+                print("Required items:")
+                load_items(lsts, choice, 1)  # 1 to Pass through if statement later
         elif choice == 'C':
-            load_items(lsts, choice, m_count)
+            if m_count == 0:
+                print("No completed items")
+            else:
+                print("Completed items:")
+                load_items(lsts, choice, m_count)
         elif choice == 'A':
             add_items(lsts, choice)
         elif choice == 'M':
-            m_count += 1
-            lsts = load_items(lsts, choice, m_count)
+            if sum(pri[0]) == 0:
+                print("No required items")
+            else:
+                m_count += 1
+                lsts = load_items(lsts, choice, m_count)
         else:
             print("Invalid menu choice.")
         print(menu)
         choice = input(">>> ").upper()
     print("{} items saved to items.csv\nHave a nice day :)".format(len(lsts[1])))
-    read_write_csv("write", lsts[0])
+    read_write_csv("write", lsts[1])
 
 
 def load_items(lsts, choice, item_info):
     total = [0, 0]  # Total[0] is total price, Total[1] is total items
     lst_num = 0  # For 'M' and 'R'
-    if choice == 'R' or choice == 'M':
-        if not lsts[lst_num]:
-            print("No required items")
-        elif choice == 'R':
-            print("Required items:")
-    elif choice == 'C':  # item_info stores m_count
+    if choice == 'C':  # item_info stores m_count
         lst_num = 1
-        if not lsts[lst_num]:
-            print("No completed items")
-        else:  # Has completed items
-            print("Completed items:")
     if choice == 'A':
         print("{}, ${:.2f} (priority {}) added to shopping list".format(*item_info))
     else:  # If choice is 'R'/'C'/'M'
@@ -86,27 +89,28 @@ def add_items(lsts, choice):  # Function for adding items
     load_items(lsts, choice, item_info)  # Pass new 'lsts' ('r' values), choice and new list to loadItems() for printing
 
 
-def order_lsts(temp_lsts):  # Function to order lists
+def order_lsts(temp_lsts, p):  # Function to order lists, and send priority
     lst = [[], []]  # Initialise nested list
     pri = [[0, 0, 0], [0, 0, 0]]  # To store priorities, pri[0] is priorities for 'r' list, pri[1] for 'c' list
-    if temp_lsts[0]:
-        for row in temp_lsts[0]:  # Get number of priorities
-            for item in range(0, 2):
-                if row[3] == R_C[item]:
-                    if row[2] == 1:  # If priority is 1
-                        pri[item][0] += 1
-                    elif row[2] == 2:  # If priority is 2
-                        pri[item][1] += 1
-                    else:  # Priority is 3
-                        pri[item][2] += 1
-        for r_c in range(0, 2):  # Loop through R_C values
-            for a in range(0, 3):  # Loop through priority values
-                for lst1 in range(0, 2):  # Loop through temp_lst lists
-                    for row in temp_lsts[lst1]:
-                        if row[2] == a + 1 and row[3] == R_C[r_c]:
-                            lst[r_c].append(row)
+    for row in temp_lsts[0]:  # Get number of priorities
+        for item in range(0, 2):
+            if row[3] == R_C[item]:
+                if row[2] == 1:  # If priority is 1
+                    pri[item][0] += 1
+                elif row[2] == 2:  # If priority is 2
+                    pri[item][1] += 1
+                else:  # Priority is 3
+                    pri[item][2] += 1
+    for r_c in range(0, 2):  # Loop through R_C values
+        for a in range(0, 3):  # Loop through priority values
+            for lst1 in range(0, 2):  # Loop through temp_lst lists
+                for row in temp_lsts[lst1]:
+                    if row[2] == a + 1 and row[3] == R_C[r_c]:
+                        lst[r_c].append(row)
+    if p == 'y':
+        return pri  # Return priority
+    else:
         return lst  # Ordered and split list
-    return temp_lsts
 
 
 def inp_chk(pick, sum_items):  # Function to handle inputs
